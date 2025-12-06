@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Will You Marry Me?</title>
+<meta name="description" content="Cute romantic proposal maker — create a shareable marriage proposal link."/>
+<style>
+  :root{
+    --bg:#2b0037; /* dark purple base */
+    --card:#3b003f;
+    --accent:#ff8fc3; /* pink */
+    --accent-2:#ff3fa8; /* deeper pink */
+    --accent-soft: rgba(255,143,195,0.12);
+    --text:#ffeef8;
+    --muted: rgba(255,255,255,0.75);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%; margin:0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+  body{
+    background:
+      radial-gradient(800px 400px at 10% 10%, rgba(255,63,168,0.05), transparent 6%),
+      radial-gradient(800px 400px at 90% 90%, rgba(255,143,195,0.03), transparent 6%),
+      linear-gradient(180deg, var(--bg) 0%, #100018 100%);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+  }
+
+  /* Page shell */
+  .shell{
+    width:100%;
+    max-width:920px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    border-radius:18px;
+    padding:28px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6), 0 2px 0 rgba(255,255,255,0.02) inset;
+    border: 1px solid rgba(255,255,255,0.02);
+    position:relative;
+    overflow:hidden;
+  }
+
+  /* pretty hearts in background */
+  .hearts{
+    position:absolute; inset:0; pointer-events:none; z-index:0;
+    background-image:
+      radial-gradient(circle at 10% 20%, rgba(255,143,195,0.06) 0 2px, transparent 4px),
+      radial-gradient(circle at 80% 70%, rgba(255,63,168,0.04) 0 2px, transparent 4px);
+    mix-blend-mode: overlay;
+  }
+
+  header{position:relative; z-index:2; text-align:center; margin-bottom:18px;}
+  .title{
+    font-size:22px; font-weight:700; color:var(--text);
+    letter-spacing:0.2px;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+  }
+  .title .heart{
+    width:16px; height:16px; background:linear-gradient(180deg,var(--accent),var(--accent-2));
+    border-radius:50%; transform:rotate(45deg); box-shadow: 0 6px 18px rgba(255,63,168,0.18);
+    clip-path: polygon(50% 0%, 100% 35%, 82% 100%, 50% 80%, 18% 100%, 0% 35%);
+  }
+  .subtitle{color:var(--muted); font-size:13px; margin-top:6px;}
+
+  /* form */
+  .form {
+    display:flex; gap:14px; align-items:stretch; justify-content:center;
+    flex-wrap:wrap; position:relative; z-index:2;
+  }
+  .field {
+    width:100%; max-width:680px;
+    display:flex; gap:10px; align-items:center; background:var(--card);
+    border-radius:12px; padding:12px; border: 1px solid rgba(255,255,255,0.03);
+  }
+  .input{
+    flex:1; background:transparent; border:none; outline:none; color:var(--text);
+    font-size:16px;
+  }
+  textarea.input{ min-height:96px; resize:vertical; padding-top:8px; font-size:15px; }
+
+  .controls{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; justify-content:center; z-index:2; }
+  .btn {
+    background: linear-gradient(180deg,var(--accent),var(--accent-2));
+    color: #16000a; border:none; padding:10px 14px; border-radius:10px; font-weight:700;
+    cursor:pointer; box-shadow: 0 8px 22px rgba(255,63,168,0.14);
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:active{ transform: translateY(2px); }
+  .btn.secondary{
+    background: transparent; color: var(--muted); border:1px solid rgba(255,255,255,0.06);
+    box-shadow:none; font-weight:600;
+  }
+
+  /* proposal view */
+  .proposal {
+    display:none; position:relative; z-index:2; margin-top:18px; padding:22px; border-radius:12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border:1px solid rgba(255,255,255,0.02);
+  }
+  .letter {
+    text-align:left; max-width:760px; margin: 0 auto;
+    background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+    padding:22px; border-radius:12px;
+  }
+  .dear { font-size:20px; font-weight:700; color:var(--accent); margin:0 0 10px 0; }
+  .msg { font-size:18px; color:var(--text); line-height:1.5; margin-bottom:16px; white-space:pre-wrap; }
+  .ask { font-size:20px; margin:20px 0 14px 0; text-align:center; color:var(--muted); }
+
+  /* yes/no area */
+  .respond {
+    display:flex; gap:18px; justify-content:center; align-items:center; flex-wrap:wrap;
+  }
+  .yes-btn, .no-btn {
+    padding:12px 18px; border-radius:12px; font-weight:800; cursor:pointer; border:none;
+    min-width:120px; font-size:16px;
+  }
+  .yes-btn {
+    background: linear-gradient(180deg,#ffe29f,#ffd36b); color:#150700; box-shadow:0 10px 30px rgba(255,211,107,0.12);
+  }
+  .no-btn {
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    color:var(--text); border:1px solid rgba(255,255,255,0.04);
+  }
+
+  /* accepted overlay */
+  .overlay {
+    position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9999;
+    background: linear-gradient(180deg, rgba(10,0,20,0.6), rgba(10,0,20,0.9));
+    backdrop-filter: blur(4px);
+  }
+  .popup {
+    background: linear-gradient(180deg, #fff0fb, #fff6f9);
+    color:#200016; padding:26px; border-radius:14px; text-align:center; max-width:420px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+  .popup h2{ margin:0 0 6px 0; font-size:20px; }
+  .popup p{ margin:6px 0 12px 0; color:#6d2944; }
+
+  /* confetti pieces */
+  .confetti-piece {
+    position:fixed; width:10px; height:16px; opacity:0.95; z-index:10001; pointer-events:none;
+    transform: rotate(25deg);
+    animation: fall 1600ms linear forwards;
+  }
+  @keyframes fall {
+    to { transform: translateY(110vh) rotate(720deg); opacity:0.95; }
+  }
+
+  /* small helpers */
+  .small { font-size:13px; color:var(--muted); }
+  .linkbox{ display:flex; gap:8px; align-items:center; justify-content:center; margin-top:10px; }
+  .copy-btn{ padding:8px 10px; border-radius:10px; background:rgba(255,255,255,0.03); color:var(--muted); border:1px solid rgba(255,255,255,0.04); cursor:pointer; }
+
+  /* responsive */
+  @media (max-width:720px){
+    .player-card img{ height:180px; }
+    .field{ padding:10px; }
+    .popup{ width:90%; }
+  }
+</style>
+</head>
+<body>
+  <div class="shell" role="main">
+    <div class="hearts" aria-hidden="true"></div>
+
+    <header>
+      <div class="title"><span class="heart" aria-hidden="true"></span> Will you marry me? <span class="heart" aria-hidden="true"></span></div>
+      <div class="subtitle">Make a cute proposal and send the link — the “No” button is playful 😉</div>
+    </header>
+
+    <!-- FORM -->
+    <div class="form" id="formArea" role="form" aria-label="Proposal form">
+      <div style="width:100%; max-width:760px;">
+        <div class="field">
+          <input id="nameInput" class="input" placeholder="Write their name (e.g. Sara)" maxlength="60" />
+        </div>
+
+        <div class="field" style="margin-top:10px;">
+          <textarea id="msgInput" class="input" placeholder="Write your feelings... (I love you because...)" maxlength="800"></textarea>
+        </div>
+
+        <div class="controls">
+          <button id="createBtn" class="btn">Create & Copy Link</button>
+          <button id="previewBtn" class="btn secondary">Preview (local)</button>
+          <button id="resetBtn" class="btn secondary">Clear</button>
+        </div>
+
+        <div class="linkbox" id="linkBox" style="display:none;">
+          <input id="shareLink" style="width:68%; background:transparent; border:1px solid rgba(255,255,255,0.03); color:var(--text); padding:8px 10px; border-radius:8px;" readonly />
+          <button id="copyBtn" class="copy-btn">Copy</button>
+        </div>
+
+        <div class="small" style="margin-top:10px; text-align:center;">Tip: after creating the link, paste it into chat or message to send the proposal.</div>
+      </div>
+    </div>
+
+    <!-- PROPOSAL VIEW (shows when link has params or user hits preview) -->
+    <div class="proposal" id="proposalArea" aria-live="polite">
+      <div class="letter" id="letter">
+        <div class="dear" id="dearLine">Dear —</div>
+        <div class="msg" id="msgLine">[message]</div>
+        <div class="ask" id="askLine">Will you marry me, — ?</div>
+
+        <div class="respond">
+          <button class="yes-btn" id="yesBtn">YES ❤️</button>
+          <button class="no-btn" id="noBtn">NO 🙈</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- accepted overlay -->
+  <div class="overlay" id="overlay">
+    <div class="popup" role="dialog" aria-modal="true">
+      <h2>They said YES! 🎉</h2>
+      <p>Congrats — the proposal was accepted 🥳</p>
+      <div style="margin-top:8px;">
+        <button id="closePopup" class="btn">Nice!</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* Helper: read URL params */
+function getParams(){
+  const p = new URLSearchParams(window.location.search);
+  return { name: p.get('name') || '', msg: p.get('msg') || '' };
+}
+
+/* Helper: html-encode to avoid broken markup in query */
+function escapeHtml(s){
+  if(!s) return '';
+  return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+}
+
+/* Show proposal with given data */
+function showProposal(name, msg, pushURL=false){
+  const dear = document.getElementById('dearLine');
+  const msgLine = document.getElementById('msgLine');
+  const ask = document.getElementById('askLine');
+  const proposalArea = document.getElementById('proposalArea');
+
+  dear.textContent = `Dear ${name},`;
+  msgLine.textContent = msg;
+  ask.textContent = `Will you marry me, ${name}?`;
+
+  // reveal proposal area
+  proposalArea.style.display = 'block';
+  proposalArea.scrollIntoView({behavior:'smooth'});
+
+  // Optionally update URL so link is shareable
+  if(pushURL){
+    const url = new URL(window.location.href.split('?')[0]);
+    url.searchParams.set('name', name);
+    url.searchParams.set('msg', msg);
+    // update address bar and show link box
+    history.replaceState({}, '', url.toString());
+    showLink(url.toString());
+  }
+}
+
+/* Link box UI */
+function showLink(url){
+  const linkBox = document.getElementById('linkBox');
+  const shareLink = document.getElementById('shareLink');
+  linkBox.style.display = 'flex';
+  shareLink.value = url;
+}
+
+/* Copy helper */
+function copyToClipboard(text){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    return navigator.clipboard.writeText(text);
+  } else {
+    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
+    ta.select(); try { document.execCommand('copy'); } catch(e){} ta.remove();
+    return Promise.resolve();
+  }
+}
+
+/* Confetti effect */
+function spawnConfetti(count=36){
+  const colors = ['#ff8fc3','#ff3fa8','#ffd36b','#8ef1ff','#ffb6e7'];
+  for(let i=0;i<count;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.left = (Math.random()*100) + 'vw';
+    el.style.top = (-10 - Math.random()*20) + 'vh';
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    el.style.width = (8 + Math.random()*8) + 'px';
+    el.style.height = (12 + Math.random()*10) + 'px';
+    el.style.opacity = 0.95;
+    el.style.transform = `rotate(${Math.random()*360}deg)`;
+    el.style.animationDuration = (1200 + Math.random()*1200) + 'ms';
+    document.body.appendChild(el);
+    setTimeout(()=> el.remove(), 2200);
+  }
+}
+
+/* NO button antics: fly away on hover / touch */
+function initNoButton(noBtn){
+  let moving = false;
+  function moveAway(){
+    if(moving) return;
+    moving = true;
+    const winW = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+    const winH = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+    const maxX = Math.max(20, winW - noBtn.offsetWidth - 40);
+    const maxY = Math.max(20, winH - noBtn.offsetHeight - 140);
+    const x = Math.floor(20 + Math.random() * (maxX - 20));
+    const y = Math.floor( (100 + Math.random() * (maxY - 100)) );
+    noBtn.style.position = 'fixed';
+    noBtn.style.left = x + 'px';
+    noBtn.style.top = y + 'px';
+    noBtn.style.zIndex = 9999;
+    // let it settle
+    setTimeout(()=> { moving = false; }, 300);
+  }
+
+  // desktop: on mouseenter
+  noBtn.addEventListener('mouseenter', (e)=> moveAway());
+
+  // mobile: on touchstart try to move
+  noBtn.addEventListener('touchstart', (e)=> { e.preventDefault(); moveAway(); });
+
+  // also on click try to move (prevent clicking)
+  noBtn.addEventListener('click', (e)=> { e.preventDefault(); moveAway(); });
+}
+
+/* main setup */
+document.addEventListener('DOMContentLoaded', ()=>{
+  const params = getParams();
+  const nameInput = document.getElementById('nameInput');
+  const msgInput = document.getElementById('msgInput');
+  const createBtn = document.getElementById('createBtn');
+  const previewBtn = document.getElementById('previewBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const shareLink = document.getElementById('shareLink');
+  const overlay = document.getElementById('overlay');
+  const closePopup = document.getElementById('closePopup');
+  const yesBtn = document.getElementById('yesBtn');
+  const noBtn = document.getElementById('noBtn');
+
+  // if page loaded with params, show proposal directly
+  if(params.name || params.msg){
+    const n = decodeURIComponent(params.name || '').trim();
+    const m = decodeURIComponent(params.msg || '').trim();
+    const safeName = escapeHtml(n || 'dear');
+    const safeMsg = escapeHtml(m || '');
+    showProposal(safeName, safeMsg, false);
+  }
+
+  // copy / create link
+  createBtn.addEventListener('click', async ()=>{
+    const nameVal = (nameInput.value || '').trim();
+    const msgVal = (msgInput.value || '').trim();
+    if(!nameVal || !msgVal){
+      alert('Please enter both the name and your feelings before creating the link.');
+      return;
+    }
+    // encode
+    const url = new URL(window.location.href.split('?')[0]);
+    url.searchParams.set('name', encodeURIComponent(nameVal));
+    url.searchParams.set('msg', encodeURIComponent(msgVal));
+    // replace address bar (so link is shareable)
+    history.replaceState({}, '', url.toString());
+    showProposal(nameVal, msgVal, false);
+    // show link box
+    showLink(url.toString());
+    try {
+      await copyToClipboard(url.toString());
+      copyBtn.textContent = 'Copied!';
+      setTimeout(()=> copyBtn.textContent = 'Copy', 1400);
+    } catch(e){
+      console.warn('Copy failed', e);
+    }
+  });
+
+  // preview local (not updating URL)
+  previewBtn.addEventListener('click', ()=>{
+    const nameVal = (nameInput.value || '').trim();
+    const msgVal = (msgInput.value || '').trim();
+    if(!nameVal || !msgVal){
+      alert('Add name and message to preview.');
+      return;
+    }
+    showProposal(nameVal, msgVal, false);
+  });
+
+  resetBtn.addEventListener('click', ()=>{
+    nameInput.value = '';
+    msgInput.value = '';
+    document.getElementById('proposalArea').style.display = 'none';
+    document.getElementById('linkBox').style.display = 'none';
+    history.replaceState({}, '', window.location.pathname);
+  });
+
+  // copy link field
+  copyBtn.addEventListener('click', async ()=>{
+    const text = shareLink.value;
+    if(!text) return;
+    try {
+      await copyToClipboard(text);
+      copyBtn.textContent = 'Copied!';
+      setTimeout(()=> copyBtn.textContent = 'Copy', 1400);
+    } catch(e){
+      alert('Copy failed. You can manually select and copy the link.');
+    }
+  });
+
+  // YES behavior
+  yesBtn.addEventListener('click', ()=>{
+    overlay.style.display = 'flex';
+    spawnConfetti(40);
+  });
+
+  // close overlay
+  closePopup.addEventListener('click', ()=>{
+    overlay.style.display = 'none';
+  });
+
+  // NO antics
+  initNoButton(noBtn);
+
+  // If user tries to press keyboard Enter on inputs: create preview
+  [nameInput, msgInput].forEach(el=> el.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){
+      // Ctrl/Cmd+Enter to preview
+      previewBtn.click();
+    }
+  }));
+
+  // accessibility: if someone manages to click no (rare), move it again
+  noBtn.addEventListener('dblclick', (e)=> { e.preventDefault(); });
+
+});
+</script>
+</body>
+</html>
